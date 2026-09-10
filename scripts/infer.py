@@ -39,6 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max-sequence-length", type=int, default=256)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--device", default="auto", help="auto, cuda, cuda:N, or cpu")
     parser.add_argument("--dtype", choices=("auto", "fp16", "bf16", "fp32"), default="auto")
@@ -63,7 +64,7 @@ def resolve_device_and_dtype(device_name: str, dtype_name: str):
     if device == "auto":
         device = "cpu"
     if dtype_name == "auto":
-        dtype = torch.float16 if device.startswith("cuda") else torch.float32
+        dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
     else:
         dtype = {
             "fp16": torch.float16,
@@ -94,7 +95,14 @@ def main() -> None:
         args.lora_path,
         local_files_only=args.local_files_only,
     ).merge_and_unload()
-    pipeline = pipeline.to(device)
+    # Force a single dtype across every sub-model: the released adapter is fp32 and some
+    # base-model text-encoder buffers can survive from_pretrained in fp16, which then
+    # mismatches the bf16 stack ("Half != BFloat16") at prompt-encoding time.
+    pipeline = pipeline.to(device, dtype=dtype)
+    for name in ("transformer", "vae", "text_encoder", "text_encoder_2", "text_encoder_3"):
+        module = getattr(pipeline, name, None)
+        if module is not None:
+            module.to(dtype)
 
     records = []
     for start in range(0, len(prompts), args.batch_size):
@@ -109,7 +117,7 @@ def main() -> None:
             guidance_scale=args.guidance_scale,
             height=args.height,
             width=args.width,
-            max_sequence_length=128,
+            max_sequence_length=args.max_sequence_length,
             generator=generators,
         ).images
         for index, (prompt, image) in enumerate(zip(batch, images), start=start):

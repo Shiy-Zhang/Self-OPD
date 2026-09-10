@@ -73,11 +73,35 @@ bash scripts/train_single_gpu.sh
 
 ## Inference
 
-The following command loads the released LoRA directly from the Hugging Face Hub and runs the default OCR-oriented prompt:
+`scripts/infer.sh` loads the released LoRA directly from the Hugging Face Hub and regenerates the three showcase samples below:
 
 ```bash
 bash scripts/infer.sh
 ```
+
+Each sample uses the defaults in `scripts/infer.py` (**bfloat16**, 40 inference steps, guidance scale 4.5, 512×512, `max_sequence_length=256`). For a single prompt the image generator is seeded with exactly `--seed`, so each command below regenerates the image above it.
+
+| Sample | Prompt | Seed |
+| --- | --- | --- |
+| ![desert](assets/desert_mirage.png) | A vast desert landscape under a scorching sun, where a mirage forms the shimmering letters "Water This Way" on the distant horizon, creating an illusion of hope in an otherwise barren and arid environment. | 142 |
+| ![storefront](assets/storefront.png) | A storefront with 'Google Brain Toronto' written on it. | 215 |
+| ![laptop](assets/laptop_teddy_bear.png) | A laptop on top of a teddy bear. | 268 |
+
+```bash
+python scripts/infer.py \
+  --prompt "A vast desert landscape under a scorching sun, where a mirage forms the shimmering letters \"Water This Way\" on the distant horizon, creating an illusion of hope in an otherwise barren and arid environment." \
+  --seed 142
+
+python scripts/infer.py \
+  --prompt "A storefront with 'Google Brain Toronto' written on it." \
+  --seed 215
+
+python scripts/infer.py \
+  --prompt "A laptop on top of a teddy bear." \
+  --seed 268
+```
+
+> Diffusion sampling is deterministic for a fixed seed within one environment, but minor pixel-level differences can appear across GPU / CUDA / library versions. The generated content matches the samples above.
 
 ## Evaluation
 
@@ -117,9 +141,10 @@ Self-OPD is implemented with [Hugging Face Diffusers](https://github.com/hugging
 ## Citation
 
 ```bibtex
-@article{zhang2026selfopd,
+@article{zhang2026self,
   title={Self-OPD: On-Policy Distillation for Flow Matching Models without Teacher},
-  author={Zhang, Shiyi and Liu, Mushui and Tong, Yunze and He, Wanggui and Zou, Siyu and Liu, Jinlong and Yu, Yunlong and Song, Jian and Jiang, Hao and Huang, Pipei and Zheng, Bo},
+  author={Zhang, Shiyi and Liu, Mushui and Tong, Yunze and He, Wanggui and Zou, Siyu and Liu, Jinlong and Yu, Yunlong and Song, Jian and Jiang, Hao and Huang, Pipei and others},
+  journal={arXiv preprint arXiv:2608.26872},
   year={2026}
 }
 ```
