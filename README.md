@@ -1,25 +1,50 @@
+<div align="center">
+
 <h1 align="center">Self-OPD: On-Policy Distillation for Flow Matching Models without Teacher</h1>
 
-<p align="center">
-  <a href="https://github.com/Shiy-Zhang/Self-OPD">Code</a> ·
-  <a href="https://huggingface.co/ShiyiZhang/Self-OPD">Model</a> ·
-  <a href="LICENSE">License</a>
-</p>
+Shiyi Zhang<sup>1,3,&#42;</sup>, 
+<a href="https://xiaobul.github.io/" target="_blank">Mushui Liu</a><sup>2,3,&#42;,&dagger;</sup>, 
+Yunze Tong<sup>2</sup>, 
+Wanggui He<sup>3</sup>, 
+Siyu Zou<sup>3</sup>, 
+Jinlong Liu<sup>3</sup>, 
+Yunlong Yu<sup>2</sup>, 
+Jian Song<sup>1</sup>, 
+Hao Jiang<sup>3,&dagger;</sup>, 
+Pipei Huang<sup>3</sup>, 
+Bo Zheng<sup>3</sup>
+
+<sup>1</sup>Tsinghua University, 
+<sup>2</sup>Zhejiang University, 
+<sup>3</sup>Alibaba Group
+
+&#42;Equal contribution, &dagger;Corresponding author
+
+
+[![arXiv](https://img.shields.io/badge/arXiv-2608.20910-b31b1b.svg)](https://arxiv.org/abs/2608.20910)
+[![Model](https://img.shields.io/badge/🤗%20%20Model-Self--OPD-yellow)](https://huggingface.co/ShiyiZhang/Self-OPD)
+</div>
+
 
 ## Overview
 
-**Self-OPD** is a teacher-free, on-policy distillation framework for flow-matching text-to-image models. It turns the current policy's self-exploration into dense, step-wise supervision without training a separate task-specific teacher.
+On-policy distillation (OPD), which leverages a pre-trained, specialized teacher model to provide
+dense supervisory signals, has achieved significant success in Large Language Models (LLMs) and has
+recently been adapted to flow matching models. However, this paradigm suffers from two major issues:
+First, training a separate, task-specific teacher for every new objective incurs high computational
+costs. Second, the discrepancy between teacher and student distributions often leads to compounding
+errors along the generation trajectory. In this paper, we introduce **Self-OPD**, a teacher-free OPD
+framework for flow matching models that turns the student’s own self-exploration into step-wise
+supervision. At each timestep, Self-OPD branches the deterministic next-state prediction into K
+stochastic SDE candidates, rolls them out with the ODE sampler, and compares their rewards
+against a deterministic self-reference baseline to obtain normalized advantages. The velocity field
+is optimized with an all-branch pull-push objective, where high-advantage branches attract the
+student and low-advantage branches repel it under direction-aware attenuation and SDE-variance
+normalization. For multi-objective alignment, Self-OPD fuses normalized scores at the reward level,
+avoiding direct gradient conflict. Experiments on single and mixed reward benchmarks show that
+Self-OPD outperforms prior RL and OPD methods without task-specific teachers.
 
-At each denoising step, Self-OPD samples multiple stochastic SDE branches around the deterministic next-state prediction, rolls each branch out with an ODE sampler, and compares its reward against a deterministic self-reference baseline. The resulting normalized advantages drive an all-branch pull-push objective with direction-aware attenuation and SDE-variance normalization. For multi-objective alignment, normalized scores are fused at the reward level to avoid direct gradient conflict.
-
-This release provides the general Self-OPD training implementation, an SD3.5-Medium recipe using OCR as the first public reward example, standalone inference, and the evaluation protocol used for the paper. Additional reward configurations and checkpoints will be released progressively.
-
-## Method
-
-- **Teacher-free dense supervision:** local exploration replaces a separately trained teacher while retaining per-step distillation targets.
-- **All-branch learning:** both positive and negative branches contribute to the update instead of discarding all but the best sample.
-- **Direction-aware updates:** repulsion is attenuated when it conflicts with the best local direction.
-- **Reward-level fusion:** black-box rewards are combined before branch selection, avoiding direct gradient competition between reward models.
+## Methodology
 
 <p align="center">
   <img src="assets/self_opd_pipeline.jpg" alt="Self-OPD pipeline" width="95%">
@@ -101,8 +126,6 @@ python scripts/infer.py \
   --seed 268
 ```
 
-> Diffusion sampling is deterministic for a fixed seed within one environment, but minor pixel-level differences can appear across GPU / CUDA / library versions. The generated content matches the samples above.
-
 ## Evaluation
 
 The unified evaluator generates each required benchmark once and reuses the GenEval/OCR images for the same-test-image PickScore and HPSv2 scores. For the separate-test-set scores, PickScore uses DrawBench and HPSv2 uses Pick-a-Pic.
@@ -148,8 +171,3 @@ Self-OPD is implemented with [Hugging Face Diffusers](https://github.com/hugging
   year={2026}
 }
 ```
-
-## License
-
-Released under the [MIT License](LICENSE).
-
