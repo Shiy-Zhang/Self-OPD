@@ -22,7 +22,7 @@ Bo Zheng<sup>3</sup>
 &#42;Equal contribution, &dagger;Corresponding author
 
 
-[![arXiv](https://img.shields.io/badge/arXiv-2608.20910-b31b1b.svg)](https://arxiv.org/pdf/2608.26872)
+[![arXiv](https://img.shields.io/badge/arXiv-2608.26872-b31b1b.svg)](https://arxiv.org/pdf/2608.26872)
 [![Model](https://img.shields.io/badge/🤗%20%20Model-Self--OPD-yellow)](https://huggingface.co/ShiyiZhang/Self-OPD)
 </div>
 
